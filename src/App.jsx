@@ -13,40 +13,30 @@ function App() {
   if (!input.trim()) return;
   setLoading(true);
 
-  const userMsg = { role: "user", text: input };
-  const updatedChat = [...chat, userMsg];
+  const updatedChat = [...chat, { role: "user", text: input }];
   setChat(updatedChat);
 
   try {
     const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-    
-    // Using 'v1' and standard 'gemini-1.5-flash'
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    // We use the most basic pro model URL
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `System: You are a professional assistant for Abhay Chetry. Resume: ${ABHAY_RESUME}\n\nUser: ${input}`
-          }]
-        }]
+        contents: [{ parts: [{ text: `Resume: ${ABHAY_RESUME}\n\nQuestion: ${input}` }] }]
       })
     });
 
     const data = await response.json();
-
     if (data.error) throw new Error(data.error.message);
 
     const botResponse = data.candidates[0].content.parts[0].text;
     setChat([...updatedChat, { role: "model", text: botResponse }]);
-
   } catch (err) {
-    console.error("Debug:", err.message);
-    setChat([...updatedChat, { role: "model", text: "I'm still having trouble connecting to Google's servers. Please try again in 5 minutes." }]);
+    setChat([...updatedChat, { role: "model", text: "Connection pending. Google is still activating this model for your key." }]);
   }
-
   setInput("");
   setLoading(false);
 };
