@@ -10,36 +10,48 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
-  if (!input.trim()) return;
-  setLoading(true);
+    if (!input.trim()) return;
+    setLoading(true);
 
-  const updatedChat = [...chat, { role: "user", text: input }];
-  setChat(updatedChat);
+    const userMsg = { role: "user", text: input };
+    const updatedChat = [...chat, userMsg];
+    setChat(updatedChat);
 
-  try {
-    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-    // We use the most basic pro model URL
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+    try {
+      const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      // Use the STABLE v1 endpoint and the FLASH model for best compatibility
+      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: `Resume: ${ABHAY_RESUME}\n\nQuestion: ${input}` }] }]
-      })
-    });
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Context: ${ABHAY_RESUME}\n\nQuestion: ${input}`
+            }]
+          }]
+        })
+      });
 
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
+      const data = await response.json();
 
-    const botResponse = data.candidates[0].content.parts[0].text;
-    setChat([...updatedChat, { role: "model", text: botResponse }]);
-  } catch (err) {
-    setChat([...updatedChat, { role: "model", text: "Connection pending. Google is still activating this model for your key." }]);
-  }
-  setInput("");
-  setLoading(false);
-};
+      if (data.error) {
+        throw new Error(data.error.message);
+      }
+
+      const botResponse = data.candidates[0].content.parts[0].text;
+      setChat([...updatedChat, { role: "model", text: botResponse }]);
+
+    } catch (err) {
+      console.error("API Error Detail:", err.message);
+      setChat([...updatedChat, { role: "model", text: "I'm still having trouble reaching the brain. Google might be finishing the setup for your new API key. Please try again in 10 minutes!" }]);
+    }
+
+    setInput("");
+    setLoading(false);
+  };
 
   return (
     <div className="container">
