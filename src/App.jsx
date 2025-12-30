@@ -19,9 +19,7 @@ function App() {
 
     try {
       const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-      
-      // Use the STABLE v1 endpoint and the FLASH model for best compatibility
-      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent?key=${API_KEY}`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -29,7 +27,10 @@ function App() {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Context: ${ABHAY_RESUME}\n\nQuestion: ${input}`
+              text: `You are a professional assistant for Abhay Chetry. 
+              Resume Context: ${ABHAY_RESUME}
+              
+              Question: ${input}`
             }]
           }]
         })
@@ -45,8 +46,8 @@ function App() {
       setChat([...updatedChat, { role: "model", text: botResponse }]);
 
     } catch (err) {
-      console.error("API Error Detail:", err.message);
-      setChat([...updatedChat, { role: "model", text: "I'm still having trouble reaching the brain. Google might be finishing the setup for your new API key. Please try again in 10 minutes!" }]);
+      console.error("Critical Error:", err.message);
+      setChat([...updatedChat, { role: "model", text: "I'm still experiencing a setup delay from Google's side. Please try one more time!" }]);
     }
 
     setInput("");
